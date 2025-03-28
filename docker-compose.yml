@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  training:
+    # Build the container using Dockerfile.train
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    # Use a shared volume to store the trained model
+    volumes:
+      - model_storage:/app/model_storage
+    # Ejecutar el script (opcional si ya está definido en Dockerfile)
+    command: ["python", "train.py"]
+    restart: on-failure
+
+  inference:
+    # Build the container using Dockerfile.infer
+    build:
+      context: .
+      dockerfile: Dockerfile.infer
+    # Use a shared volume to cargar el modelo
+    volumes:
+      - model_storage:/app/model_storage
+    # Exponer el puerto 8080 para el servidor Flask
+    ports:
+      - "8080:8080"
+    # Asegurar que este contenedor se inicie después del entrenamiento
+    depends_on:
+      - training
+    command: ["python", "server.py"]
+
+# Define el volumen compartido
+volumes:
+  model_storage:
+    driver: local
+
